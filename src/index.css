@@ -1,0 +1,16 @@
+/* TransitSync — global styles */
+/* Tailwind v4 CSS-based import (no tailwind.config.js needed) */
+@import "tailwindcss";
+
+/* Reset body margin — Tailwind's preflight handles most resets */
+body {
+  margin: 0;
+  font-family: system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+/* Root fills full height */
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
