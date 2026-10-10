@@ -1,8 +1,11 @@
-import { Bus, Bike, Car } from 'lucide-react';
-import type { LastMileOption } from '../data/sampleRoutes';
+import { Bus, Car } from 'lucide-react';
+import type { LastMileOption } from '../data/stationData';
+import RapidoHandoffPanel from './RapidoHandoffPanel';
 
 interface LastMilePanelProps {
   options: LastMileOption[];
+  pickupStation: string | null;
+  dropStation: string | null;
 }
 
 const modeIcon = (mode: string) => {
@@ -13,7 +16,7 @@ const modeIcon = (mode: string) => {
     case 'auto':
       return <Car size={20} aria-hidden="true" />;
     default:
-      return <Bike size={20} aria-hidden="true" />;
+      return <Bus size={20} aria-hidden="true" />;
   }
 };
 
@@ -23,7 +26,7 @@ const modeAccent: Record<string, { bg: string; border: string; icon: string }> =
   auto:  { bg: 'bg-yellow-50',  border: 'border-yellow-300', icon: 'text-yellow-700' },
 };
 
-export default function LastMilePanel({ options }: LastMilePanelProps) {
+export default function LastMilePanel({ options, pickupStation, dropStation }: LastMilePanelProps) {
   return (
     <section aria-labelledby="lastmile-heading">
       <h3
@@ -39,6 +42,29 @@ export default function LastMilePanel({ options }: LastMilePanelProps) {
             border: 'border-gray-200',
             icon: 'text-gray-600',
           };
+
+          // Auto-rickshaw: replace generic card body with Rapido handoff panel
+          if (opt.mode === 'auto') {
+            return (
+              <div
+                key={opt.mode}
+                className={`rounded-lg border ${accent.bg} ${accent.border} p-4 flex flex-col gap-2`}
+                role="article"
+                aria-label={opt.label}
+              >
+                <div className={`flex items-center gap-2 font-semibold text-gray-800 ${accent.icon}`}>
+                  {modeIcon(opt.mode)}
+                  <span className="text-sm">{opt.label}</span>
+                </div>
+                <p className="text-xs text-gray-600 leading-snug">{opt.description}</p>
+                <RapidoHandoffPanel
+                  pickupStation={pickupStation}
+                  dropStation={dropStation}
+                />
+              </div>
+            );
+          }
+
           return (
             <div
               key={opt.mode}

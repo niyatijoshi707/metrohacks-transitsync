@@ -1,5 +1,5 @@
 import { MapPin, Navigation, Search } from 'lucide-react';
-import { STATIONS } from '../data/sampleRoutes';
+import { STATIONS } from '../data/stationData';
 
 interface JourneyPlannerProps {
   from: string;
@@ -16,6 +16,11 @@ export default function JourneyPlanner({
   onToChange,
   onFindRoute,
 }: JourneyPlannerProps) {
+  // De-duplicate station names for display (shared stations appear once)
+  const uniqueStations = STATIONS.filter(
+    (s, idx, arr) => arr.findIndex((x) => x.id === s.id) === idx,
+  );
+
   return (
     <section
       aria-labelledby="planner-heading"
@@ -46,7 +51,7 @@ export default function JourneyPlanner({
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#0B2545] focus:border-[#0B2545]"
           >
             <option value="">— Select boarding station —</option>
-            {STATIONS.map((s) => (
+            {uniqueStations.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
               </option>
@@ -63,20 +68,19 @@ export default function JourneyPlanner({
             <Search size={12} className="inline mr-1 text-[#0B2545]" aria-hidden="true" />
             Destination
           </label>
-          <input
-            id="destination-input"
-            type="text"
-            list="destination-list"
+          <select
+            id="destination-select"
             value={to}
             onChange={(e) => onToChange(e.target.value)}
-            placeholder="Search destination station…"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#0B2545] focus:border-[#0B2545] placeholder:text-gray-400"
-          />
-          <datalist id="destination-list">
-            {STATIONS.map((s) => (
-              <option key={s.id} value={s.name} />
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#0B2545] focus:border-[#0B2545]"
+          >
+            <option value="">— Select destination station —</option>
+            {uniqueStations.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
             ))}
-          </datalist>
+          </select>
         </div>
       </div>
 

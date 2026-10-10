@@ -1,9 +1,9 @@
 import { Clock, CreditCard, ArrowRight, AlertCircle } from 'lucide-react';
-import type { MetroLine, Stop } from '../data/sampleRoutes';
+import type { MetroLine, Station } from '../data/stationData';
 
 interface RouteCardProps {
   line: MetroLine;
-  stops: Stop[];
+  stops: Station[];
   from: string;
   to: string;
   durationMin: number;
@@ -155,7 +155,7 @@ export default function RouteCard({
                   )}
 
                   {/* Interchange badges */}
-                  {stop.interchange?.map((mode) => (
+                  {stop.otherModes?.map((mode) => (
                     <span
                       key={mode}
                       className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${modeColors[mode] ?? 'bg-gray-100 text-gray-700'}`}

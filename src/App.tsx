@@ -1,22 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Header from './components/Header';
 import DemoBanner from './components/DemoBanner';
 import JourneyPlanner from './components/JourneyPlanner';
 import RouteCard from './components/RouteCard';
+import MultiLegRouteCard from './components/MultiLegRouteCard';
 import LastMilePanel from './components/LastMilePanel';
 import DelaySimulator from './components/DelaySimulator';
 import {
   SAMPLE_JOURNEY,
   LAST_MILE_OPTIONS,
-  STATIONS,
-} from './data/sampleRoutes';
+  STATION_BY_ID,
+} from './data/stationData';
+import { findRoute, type RouteResult } from './data/routingEngine';
 
 export default function App() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
-  const [showRoute, setShowRoute] = useState(false);
-  const [delayMin, setDelayMin] = useState(0);
+  const [isOnline,   setIsOnline]   = useState(navigator.onLine);
+  const [from,       setFrom]       = useState('');
+  const [to,         setTo]         = useState('');
+  const [showRoute,  setShowRoute]  = useState(false);
+  const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
+  const [delayMin,   setDelayMin]   = useState(0);
 
   // Track online/offline status
   useEffect(() => {
@@ -30,25 +33,39 @@ export default function App() {
     };
   }, []);
 
-  const handleFindRoute = () => {
-    // Full routing engine not implemented yet — shows sample route for demo.
+  const handleFindRoute = useCallback(() => {
+    if (!from || !to) return;
+    const result = findRoute(from, to);
+    setRouteResult(result);
     setShowRoute(true);
     setDelayMin(0);
-  };
+  }, [from, to]);
 
   const handleSimulateDelay = () => {
-    // Random delay between 3 and 18 minutes (simulated)
     const delay = Math.floor(Math.random() * 16) + 3;
     setDelayMin(delay);
   };
 
   const handleResetDelay = () => setDelayMin(0);
 
-  // Resolve display names from IDs
-  const fromName =
-    STATIONS.find((s) => s.id === from)?.name ?? SAMPLE_JOURNEY.from;
-  const toName =
-    (STATIONS.find((s) => s.name === to)?.name ?? to) || SAMPLE_JOURNEY.to;
+  // Derive pickup/drop station names for Rapido handoff
+  // After a route is found, use the actual board/alight stations.
+  // Before that (preview), use the selected from/to if available.
+  const pickupStationName: string | null = (() => {
+    if (routeResult?.found) {
+      return STATION_BY_ID[routeResult.boardStationId]?.name ?? null;
+    }
+    if (from) return STATION_BY_ID[from]?.name ?? null;
+    return null;
+  })();
+
+  const dropStationName: string | null = (() => {
+    if (routeResult?.found) {
+      return STATION_BY_ID[routeResult.alightStationId]?.name ?? null;
+    }
+    if (to) return STATION_BY_ID[to]?.name ?? null;
+    return null;
+  })();
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -62,13 +79,21 @@ export default function App() {
         <JourneyPlanner
           from={from}
           to={to}
-          onFromChange={setFrom}
-          onToChange={setTo}
+          onFromChange={(val) => {
+            setFrom(val);
+            setShowRoute(false);
+            setRouteResult(null);
+          }}
+          onToChange={(val) => {
+            setTo(val);
+            setShowRoute(false);
+            setRouteResult(null);
+          }}
           onFindRoute={handleFindRoute}
         />
 
-        {/* Route results — shown after "Find Route" or as sample on first load */}
-        <section aria-label="Sample route result">
+        {/* Route results */}
+        <section aria-label="Route result">
           <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
             <h2 className="text-sm font-bold text-[#0B2545] uppercase tracking-wide">
               {showRoute ? 'Suggested Route (Demo)' : 'Sample Route Preview'}
@@ -86,21 +111,31 @@ export default function App() {
           />
 
           <div className="mt-4">
-            <RouteCard
-              line={SAMPLE_JOURNEY.line}
-              stops={SAMPLE_JOURNEY.stops}
-              from={showRoute && from ? fromName : SAMPLE_JOURNEY.from}
-              to={showRoute && to   ? toName   : SAMPLE_JOURNEY.to}
-              durationMin={SAMPLE_JOURNEY.durationMin}
-              fareINR={SAMPLE_JOURNEY.fareINR}
-              nextDeparture={SAMPLE_JOURNEY.nextDeparture}
-              delayMin={delayMin}
-            />
+            {showRoute && routeResult ? (
+              /* Calculated route from engine */
+              <MultiLegRouteCard result={routeResult} delayMin={delayMin} />
+            ) : (
+              /* Sample route preview (before any search) */
+              <RouteCard
+                line={SAMPLE_JOURNEY.line}
+                stops={SAMPLE_JOURNEY.stops}
+                from={SAMPLE_JOURNEY.from}
+                to={SAMPLE_JOURNEY.to}
+                durationMin={SAMPLE_JOURNEY.durationMin}
+                fareINR={SAMPLE_JOURNEY.fareINR}
+                nextDeparture={SAMPLE_JOURNEY.nextDeparture}
+                delayMin={delayMin}
+              />
+            )}
           </div>
         </section>
 
-        {/* Last-mile options */}
-        <LastMilePanel options={LAST_MILE_OPTIONS} />
+        {/* Last-mile options — with Rapido handoff for auto */}
+        <LastMilePanel
+          options={LAST_MILE_OPTIONS}
+          pickupStation={pickupStationName}
+          dropStation={dropStationName}
+        />
       </main>
 
       {/* Footer */}
