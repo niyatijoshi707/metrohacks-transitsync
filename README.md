@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # TransitSync 🚇
 ### One journey. Multiple modes. Fewer surprises.
 
@@ -183,24 +184,135 @@ npm install
 
 ### 3. Start the development server
 
+=======
+# TransitSync — Ahmedabad Integrated Public Transport
+
+**Offline-First Multi-Modal Journey Planner**  
+Built for **METRO HACKS by GDG Gandhinagar**  
+*Track 2: City Public Transport · Problem 6: Multi-Modal Coordination*
+
+---
+
+## 🚀 Overview
+
+TransitSync coordinates journey planning across the entire public transit ecosystem of Ahmedabad and Gandhinagar:
+- **GMRC Metro Rail**: 54 physical stations across 4 corridors (Blue, Red, Yellow, and Violet Phase-2 GIFT City branch).
+- **AMTS Feeder Buses**: Official GTFS scheduled departures for routes Metro1–Metro14 and Feeder-8/9.
+- **Janmarg BRTS**: Dedicated bus rapid transit stops, physical walking distances, and offline-safe walking directions.
+- **Auto-Rickshaw & Rapido Handoff**: Fare estimates (base ₹30 + ₹14/km) with direct deep-link handoff to the Rapido app.
+- **100% Offline-First Architecture**: Progressive Web App (PWA) with zero runtime server dependencies. Operates seamlessly in airplane mode or during network outages in underground metro concourses.
+
+---
+
+## ⚖️ What is Real / Estimated / Simulated
+
+Transparency is a core design principle of TransitSync. Every itinerary leg displays an explicit source chip indicating the provenance of its data:
+
+### 1. What is Real
+- **Metro Stations & Network Topology**: All 54 physical metro stations, correct line sequences, and physical interchange hubs (Old High Court, Motera Stadium, GNLU).
+- **Official GMRC Timetables**: Exact per-train departure and arrival times from the official GMRC timetable (effective 18 May 2026) for major corridor timing points (APMC, Old High Court, Motera Stadium, Koteshwar Road, GNLU, Infocity, Sachivalaya, Mahatma Mandir, and the GNLU–GIFT City branch).
+- **AMTS Feeder Bus GTFS Timetables**: Static GTFS scheduled departures and stop sequences for routes Metro1 through Metro14 and Apparel Park Feeder-8/Feeder-9.
+- **Transit Hub Coordinates**: Actual GPS coordinates and straight-line distances from metro stations to nearest AMTS and Janmarg BRTS stops.
+- **Official Metro Fares**: Matrix fares in INR from GMRC fare charts.
+- **External Links**: Direct link to Rapido (`https://www.rapido.bike/`) and Google Maps walking directions (automatically disabled when offline).
+
+### 2. What is Estimated
+- **Intermediate Metro Timings**: For metro stations between published GMRC timing points, departure times are linearly interpolated based on station order and labeled with the `Estimated` source chip.
+- **Blue Line Departures**: Because GMRC publishes frequency charts rather than individual train tables for the Blue Line, departure times are generated using the published headways (12 min peak, 15 min off-peak) and labeled with the `Approximate` source chip.
+- **Walking Times**: Walking duration is calculated as `straightLineDistanceM × 1.3 / (80 m/min)` (accounting for road circuity and standard urban walking speed).
+- **Last-Mile Distance & Auto Fares**: Auto-rickshaw fares are calculated using the Ahmedabad municipal formula `₹30 base + ₹14/km` applied to straight-line distance or landmark Haversine coordinates.
+
+### 3. What is Simulated
+- **Transport Delays**: The Delay Simulator panel simulates real-world delays (+5, +10, +20 minutes) on Metro, AMTS, or BRTS.
+- **Missed Connection Detection**: If a delay reduces a transfer buffer below 3 minutes or increases connection wait past 12 minutes, the engine flags the connection as `"Connection Likely Missed"` and dynamically recommends alternative modes (Janmarg BRTS, feeder bus, or auto-rickshaw).
+- **Live Vehicle Tracking**: Real-time vehicle GPS positions are not polled; all coordination logic is executed deterministically offline from static datasets.
+
+---
+
+## 🏆 5-Step Judge Demo Script
+
+Follow these 5 steps to verify all hackathon requirements during judging:
+
+### Step 1: Airplane Mode / Offline Reliability
+1. Open the application in your browser (`http://localhost:5173/` or deployed Netlify URL).
+2. Open DevTools → **Network** tab → Check **Offline** (or enable Airplane Mode on your device).
+3. Notice the header status badge updates instantly to **"Offline Mode (PWA Cached)"**. All routing calculations, station search, and schedules continue to work with 0 network latency.
+
+### Step 2: Station & Landmark Search with Disambiguation
+1. In the **Destination** field, type `"Science City"` or `"Vastral"`.
+2. Notice the autocomplete surfaces landmarks with a distinctive landmark chip and notes its nearest metro station.
+3. If searching an area with multiple landmarks (e.g., `"Vastral"`), notice the disambiguation banner: *"Where near Vastral do you want to go?"* with one-click choices for *RTO East*, *Vastral Lake*, and *Madhav Farm*.
+
+### Step 3: Multi-Modal Itinerary & Source Chips
+1. Click the **"Paldi → Vastral Gam"** quick scenario button (or set Boarding: `Paldi`, Destination: `Vastral Gam`) and click **Find Route**.
+2. Examine the generated multi-leg itinerary:
+   - **Leg 1**: Metro Red Line from Paldi to Old High Court.
+   - **Leg 2**: Physical transfer buffer at Old High Court interchange (`~3 min`).
+   - **Leg 3**: Metro Blue Line to Vastral Gam with clear navigation guidance (*"Get off at Vastral Gam, 1 stop after Nirant Cross Road"*).
+   - Note the transparent source chips: `Scheduled (GMRC timetable w.e.f. 18 May 2026)` and `Approximate`.
+
+### Step 4: Delay Simulator & Multi-Modal Coordination
+1. In the **Delay Simulator** panel, click **"+10 min"** or **"+20 min"** on the Metro service.
+2. Watch the engine dynamically cascade the delay:
+   - The transfer leg turns red with the alert: *"Connection Likely Missed: arrived at 08:32, but train departed at 08:24"*.
+   - The animated recommendation banner surfaces the next best multi-modal fallback: *"Better option: Take AMTS Feeder Metro9 departing at 08:45"* or *"Switch to Janmarg BRTS"*.
+
+### Step 5: Last-Mile Connectivity & Online/Offline Behavior
+1. Scroll down to the **Last-Mile Feeder & Transit Options** cards:
+   - **Janmarg BRTS Card**: Distances `< 500 m` are highlighted in **bold**; distances `≥ 500 m` in normal weight.
+   - **AMTS Card**: Displays next scheduled GTFS feeder bus departure and wait time.
+   - **Auto-Rickshaw Card**: Displays estimated fare (`₹30 + ₹14/km`) and direct **"Open Rapido"** handoff link.
+2. While offline, notice the "Walk to BRTS stop" button disables and reads **"Map needs internet"**, preventing broken navigation pages in airplane mode.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Framework**: React 19 + TypeScript + Vite 8
+- **Styling**: Tailwind CSS v4 (Indian government portal aesthetic: Navy `#0B2545`, Saffron `#FF9933`, White background)
+- **Offline & PWA**: `vite-plugin-pwa` with Workbox Service Worker caching
+- **Icons**: `lucide-react`
+- **Testing**: Vitest with jsdom (116 passing unit and integration tests)
+- **Linting**: Oxlint
+
+---
+
+## 💻 Local Development & Testing
+
+### 1. Install dependencies
+```bash
+npm install
+```
+
+### 2. Run local development server
+>>>>>>> 705bd65 (feat: complete multimodal TransitSync journey planner)
 ```bash
 npm run dev
 ```
 
+<<<<<<< HEAD
 Open the local URL printed in the terminal, usually `http://localhost:5173/`.
 
 ### 4. Run the tests
 
+=======
+### 3. Run unit and integration tests (116 tests)
+>>>>>>> 705bd65 (feat: complete multimodal TransitSync journey planner)
 ```bash
 npm run test
 ```
 
+<<<<<<< HEAD
 ### 5. Create a production build
 
+=======
+### 4. Build production PWA bundle
+>>>>>>> 705bd65 (feat: complete multimodal TransitSync journey planner)
 ```bash
 npm run build
 ```
 
+<<<<<<< HEAD
 The production output is generated in the `dist/` directory.
 
 To check the production build locally, use:
@@ -253,3 +365,9 @@ Add the project's chosen license before distributing or reusing the code. Until 
 ---
 
 **TransitSync — because the journey doesn't end at the metro station.**
+=======
+### 5. Preview production build locally
+```bash
+npm run preview
+```
+>>>>>>> 705bd65 (feat: complete multimodal TransitSync journey planner)

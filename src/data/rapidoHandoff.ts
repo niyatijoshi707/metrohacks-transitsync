@@ -20,7 +20,17 @@ export const RAPIDO_BASE_URL = 'https://www.rapido.bike/';
 
 export interface RapidoHandoffData {
   pickupStation: string;
-  dropStation: string;
+  /**
+   * Metro alighting station — kept for backward compatibility.
+   * In the Rapido panel the pickup IS the metro exit, so this field is used
+   * only when `onwardDestination` is not supplied.
+   */
+  dropStation?: string;
+  /**
+   * User-entered final destination address (post-metro leg).
+   * When present, takes precedence over `dropStation` in the detail text.
+   */
+  onwardDestination?: string;
 }
 
 /**
@@ -34,16 +44,22 @@ export function buildRapidoUrl(_data: RapidoHandoffData): string {
 }
 
 /**
- * Build a human-readable journey detail string for copy/paste.
- * Returns null if either pickup or drop is missing.
+ * Build a human-readable journey detail string for copy/paste into the Rapido app.
+ *
+ * `onwardDestination` (user-entered final address) takes precedence over the
+ * legacy `dropStation` field. Returns null if pickupStation or a destination
+ * value is missing.
  */
 export function buildJourneyDetailText(data: Partial<RapidoHandoffData>): string | null {
-  const { pickupStation, dropStation } = data;
-  if (!pickupStation || !dropStation) return null;
+  const { pickupStation, dropStation, onwardDestination } = data;
+  if (!pickupStation) return null;
+  // Prefer the user-entered onward destination; fall back to dropStation
+  const destination = onwardDestination || dropStation;
+  if (!destination) return null;
   return [
     'TransitSync — Last-Mile Handoff (Auto-Rickshaw via Rapido)',
     `Pickup:      ${pickupStation}`,
-    `Destination: ${dropStation}`,
+    `Destination: ${destination}`,
     '',
     'Note: Enter these details manually in the Rapido app.',
     'Rapido availability, fare, and booking are handled entirely by Rapido.',

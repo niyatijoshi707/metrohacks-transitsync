@@ -15,7 +15,7 @@ export default defineConfig({
     // PWA plugin — enables offline caching via service worker
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons.svg'],
+      includeAssets: ['favicon.svg', 'icons.svg', 'images/*.webp'],
       manifest: {
         name: 'TransitSync — Ahmedabad Integrated Public Transport',
         short_name: 'TransitSync',
@@ -35,14 +35,17 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Cache pages and assets for offline use
+        // Precache all built assets including webp images for offline airplane mode
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
+        navigateFallback: 'index.html',
+        // Cache external fonts or resources if accessed
         runtimeCaching: [
           {
             urlPattern: /^https?.*/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'transitsync-cache-v1',
-              networkTimeoutSeconds: 10,
+              networkTimeoutSeconds: 5,
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 * 24, // 1 day
